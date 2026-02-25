@@ -1,6 +1,6 @@
 services:
   vllm:
-    image: vllm/vllm-openai:latest
+    image: vllm/vllm-openai:v0.6.6.post1
     container_name: vllm-server
     ports:
       - "${VLLM_PORT:-8030}:8000"
@@ -17,9 +17,9 @@ services:
       - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
     command: >
       --model ${DEFAULT_MODEL_ID:-Qwen/Qwen2.5-7B-Instruct-GPTQ-Int4}
-      --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION:-0.85}
+      --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION:-0.92}
       --enforce-eager
-      --max-model-len ${VLLM_MAX_MODEL_LEN:-4096}
+      --max-model-len ${VLLM_MAX_MODEL_LEN:-2048}
       --dtype auto
       --trust-remote-code
     restart: unless-stopped
