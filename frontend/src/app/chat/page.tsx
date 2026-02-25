@@ -36,7 +36,7 @@ export default function ChatPage() {
           onSelect={setSelectedCollection}
         />
         <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm text-gray-900">
             <input
               type="checkbox"
               checked={useRag}

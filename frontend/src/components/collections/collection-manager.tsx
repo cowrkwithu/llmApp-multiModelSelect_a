@@ -52,7 +52,7 @@ export function CollectionManager({
             }`}
             onClick={() => onSelect(col.name)}
           >
-            <span className="truncate">{col.name}</span>
+            <span className="truncate text-gray-900">{col.name}</span>
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-400">
                 {col.points_count} chunks
@@ -82,7 +82,7 @@ export function CollectionManager({
           value={newLabel}
           onChange={(e) => setNewLabel(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+          className="flex-1 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
         />
         <button
           onClick={handleCreate}

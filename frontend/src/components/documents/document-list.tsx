@@ -33,7 +33,7 @@ export function DocumentList({ collection }: Props) {
               className="flex items-center justify-between rounded px-3 py-2 text-sm hover:bg-gray-50"
             >
               <div>
-                <span className="font-medium">{doc.filename}</span>
+                <span className="font-medium text-gray-900">{doc.filename}</span>
                 <span className="ml-2 text-xs text-gray-400">
                   {doc.chunks_count} chunks
                 </span>

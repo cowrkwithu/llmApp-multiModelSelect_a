@@ -26,7 +26,7 @@ export function ChatInput({ onSend, isStreaming, onStop, sendDisabled }: Props) 
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder={sendDisabled ? "Select a collection to use RAG" : "Ask a question..."}
-        className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
       />
       {isStreaming ? (
         <button

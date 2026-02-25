@@ -30,7 +30,7 @@ export function DocumentUploader({ collection }: Props) {
         accept=".pdf,.docx,.txt"
         onChange={handleUpload}
         disabled={!collection || upload.isPending}
-        className="w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+        className="w-full text-sm text-gray-900 file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
       />
       {upload.isPending && (
         <p className="mt-2 text-xs text-blue-600">Uploading & processing...</p>
