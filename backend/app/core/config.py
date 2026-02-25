@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     # vLLM
     vllm_host: str = "localhost"
     vllm_port: int = 8030
-    vllm_gpu_memory_utilization: float = 0.85
-    vllm_max_model_len: int = 4096
+    vllm_gpu_memory_utilization: float = 0.92
+    vllm_max_model_len: int = 2048
 
     # Qdrant
     qdrant_host: str = "localhost"

@@ -50,6 +50,17 @@ async def upload_documents(
     return UploadResult(results=results, errors=errors)
 
 
+@router.post("/upload-folder", response_model=UploadResult)
+async def upload_folder(
+    files: list[UploadFile],
+    collection: str,
+):
+    """Upload multiple files (used for folder-level upload from frontend).
+    The frontend reads the folder and sends all files as a multipart request.
+    """
+    return await upload_documents(files=files, collection=collection)
+
+
 @router.get("/")
 async def list_documents(collection: str):
     try:

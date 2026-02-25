@@ -184,6 +184,7 @@ curl http://localhost:8020/health
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/upload?collection={name}` | 파일 업로드 (multipart, 다중 파일) |
+| POST | `/upload-folder?collection={name}` | 폴더 단위 업로드 (multipart, 다중 파일) |
 | GET | `/?collection={name}` | 문서 목록 |
 | DELETE | `/{document_id}?collection={name}` | 문서 + 벡터 삭제 |
 
@@ -304,7 +305,6 @@ docker compose down -v
 - Next.js 16, React 19, TypeScript
 - Tailwind CSS 4
 - TanStack React Query
-- Zustand
 
 **Infrastructure**
 - vLLM (OpenAI-compatible inference server)
