@@ -64,7 +64,9 @@
 ## Prerequisites
 
 - **OS**: Linux (WSL2 포함)
-- **GPU**: NVIDIA GPU (8GB+ VRAM 권장, CUDA 지원)
+- **GPU**: NVIDIA GPU (8GB+ VRAM 권장, CUDA 12.x 지원 드라이버)
+  - 현재 vLLM 이미지(`v0.6.6.post1`)는 CUDA 12.4 기반. Driver 545+ 필요
+  - `latest` 이미지는 CUDA 12.9 요구하므로 최신 드라이버 필요
 - **Docker**: Docker Engine + Docker Compose v2 + [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
 - **Python**: 3.11+
 - **Node.js**: 18+
@@ -257,8 +259,8 @@ llmApp-multiModelSelect_a/
 | `QDRANT_PORT` | 6333 | Qdrant 포트 |
 | `BACKEND_PORT` | 8020 | Backend API 포트 |
 | `DEFAULT_MODEL_ID` | Qwen/Qwen2.5-7B-Instruct-GPTQ-Int4 | 기본 로드 모델 |
-| `VLLM_GPU_MEMORY_UTILIZATION` | 0.85 | GPU 메모리 사용률 |
-| `VLLM_MAX_MODEL_LEN` | 4096 | 최대 컨텍스트 길이 |
+| `VLLM_GPU_MEMORY_UTILIZATION` | 0.92 | GPU 메모리 사용률 (RTX 2070 8GB 기준) |
+| `VLLM_MAX_MODEL_LEN` | 2048 | 최대 컨텍스트 길이 (VRAM 제약으로 축소) |
 | `EMBEDDING_MODEL` | intfloat/multilingual-e5-base | 임베딩 모델 |
 | `RAG_TOP_K` | 5 | 검색 결과 수 |
 | `RAG_CHUNK_SIZE` | 512 | 문서 청크 크기 |
@@ -266,6 +268,9 @@ llmApp-multiModelSelect_a/
 | `HF_TOKEN` | (empty) | HuggingFace 토큰 (gated 모델용) |
 
 ## Docker Compose Commands
+
+> **Note**: vLLM 이미지는 `vllm/vllm-openai:v0.6.6.post1` (CUDA 12.4 기반)을 사용한다.
+> `latest` 이미지는 CUDA 12.9를 요구하므로, CUDA 12.3 이하 환경에서는 반드시 고정 버전을 사용해야 한다.
 
 ```bash
 # 기본 서비스 시작 (vLLM + Qdrant)
