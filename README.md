@@ -127,6 +127,22 @@ npm run dev
 
 UI 접속: http://localhost:3020
 
+### 6. Quick Start / Stop (전체 서비스 일괄 관리)
+
+```bash
+# 전체 서비스 시작 (Docker + Backend + Frontend)
+./scripts/start.sh
+
+# 전체 서비스 정지
+./scripts/stop.sh
+
+# Frontend 없이 시작
+./scripts/start.sh --no-frontend
+
+# Docker는 유지하고 Backend/Frontend만 정지
+./scripts/stop.sh --keep-docker
+```
+
 ## Usage
 
 ### Quick Start
