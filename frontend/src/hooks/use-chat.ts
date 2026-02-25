@@ -61,7 +61,9 @@ export function useChat() {
 
             try {
               const event: ChatSSEEvent = JSON.parse(json);
-              if (event.type === "sources" && event.sources) {
+              if (event.type === "error" && event.content) {
+                throw new Error(event.content);
+              } else if (event.type === "sources" && event.sources) {
                 sources = event.sources;
               } else if (event.type === "token" && event.content) {
                 assistantContent += event.content;
