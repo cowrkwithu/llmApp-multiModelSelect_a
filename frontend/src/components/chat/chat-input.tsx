@@ -6,15 +6,15 @@ interface Props {
   onSend: (message: string) => void;
   isStreaming: boolean;
   onStop: () => void;
-  disabled?: boolean;
+  sendDisabled?: boolean;
 }
 
-export function ChatInput({ onSend, isStreaming, onStop, disabled }: Props) {
+export function ChatInput({ onSend, isStreaming, onStop, sendDisabled }: Props) {
   const [input, setInput] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isStreaming) return;
+    if (!input.trim() || isStreaming || sendDisabled) return;
     onSend(input.trim());
     setInput("");
   };
@@ -25,9 +25,8 @@ export function ChatInput({ onSend, isStreaming, onStop, disabled }: Props) {
         type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Ask a question..."
-        disabled={disabled}
-        className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:opacity-50"
+        placeholder={sendDisabled ? "Select a collection to use RAG" : "Ask a question..."}
+        className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
       />
       {isStreaming ? (
         <button
@@ -40,7 +39,7 @@ export function ChatInput({ onSend, isStreaming, onStop, disabled }: Props) {
       ) : (
         <button
           type="submit"
-          disabled={!input.trim() || disabled}
+          disabled={!input.trim() || sendDisabled}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
         >
           Send

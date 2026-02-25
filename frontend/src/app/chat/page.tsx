@@ -67,7 +67,7 @@ export default function ChatPage() {
             onSend={handleSend}
             isStreaming={isStreaming}
             onStop={stopStreaming}
-            disabled={useRag && !selectedCollection}
+            sendDisabled={useRag && !selectedCollection}
           />
         </div>
       </div>
