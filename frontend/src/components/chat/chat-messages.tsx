@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import type { Source } from "@/lib/types";
 import { SourceCitation } from "./source-citation";
 
@@ -15,6 +16,12 @@ interface Props {
 }
 
 export function ChatMessages({ messages, isStreaming }: Props) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isStreaming]);
+
   return (
     <div className="flex-1 overflow-y-auto space-y-4 p-4">
       {messages.length === 0 && (
@@ -46,6 +53,7 @@ export function ChatMessages({ messages, isStreaming }: Props) {
           </div>
         </div>
       ))}
+      <div ref={bottomRef} />
     </div>
   );
 }
