@@ -8,6 +8,13 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Load .env if present (export all vars for child processes)
+if [ -f "$PROJECT_DIR/.env" ]; then
+    set -a
+    source "$PROJECT_DIR/.env"
+    set +a
+fi
+
 BACKEND_PORT="${BACKEND_PORT:-8020}"
 VLLM_PORT="${VLLM_PORT:-8030}"
 QDRANT_PORT="${QDRANT_PORT:-6333}"
