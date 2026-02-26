@@ -40,13 +40,20 @@ async def switch_model(req: SwitchModelRequest):
     if req.model_id not in valid_ids:
         raise HTTPException(status_code=400, detail=f"Unknown model: {req.model_id}")
 
+    project_dir = str(settings.models_json_path).rsplit("/docker", 1)[0]
     try:
         subprocess.run(
             ["docker", "compose", "stop", "vllm"],
-            cwd=str(settings.models_json_path).rsplit("/docker", 1)[0],
+            cwd=project_dir,
             check=True,
             capture_output=True,
             timeout=30,
+        )
+        subprocess.run(
+            ["docker", "compose", "rm", "-f", "vllm"],
+            cwd=project_dir,
+            capture_output=True,
+            timeout=10,
         )
         subprocess.run(
             [
@@ -55,7 +62,7 @@ async def switch_model(req: SwitchModelRequest):
                 "-e", f"DEFAULT_MODEL_ID={req.model_id}",
                 "--service-ports", "vllm",
             ],
-            cwd=str(settings.models_json_path).rsplit("/docker", 1)[0],
+            cwd=project_dir,
             check=True,
             capture_output=True,
             timeout=30,

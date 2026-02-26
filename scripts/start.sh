@@ -21,6 +21,8 @@ done
 
 echo "=== Starting Local RAG LLM Application ==="
 
+mkdir -p "$PROJECT_DIR/logs"
+
 # 1. Docker services (vLLM + Qdrant)
 echo ""
 echo "[1/3] Starting Docker services (vLLM + Qdrant)..."

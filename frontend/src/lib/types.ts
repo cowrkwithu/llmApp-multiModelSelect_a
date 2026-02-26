@@ -43,7 +43,7 @@ export interface Source {
 }
 
 export interface ChatSSEEvent {
-  type: "sources" | "token" | "done";
+  type: "sources" | "token" | "done" | "error";
   content?: string;
   sources?: Source[];
 }
