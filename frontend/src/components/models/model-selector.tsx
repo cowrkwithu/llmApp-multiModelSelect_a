@@ -16,12 +16,12 @@ export function ModelSelector() {
         Status:{" "}
         <span
           className={
-            active?.vllm_status === "healthy"
+            active?.status === "healthy"
               ? "text-green-600"
               : "text-red-500"
           }
         >
-          {active?.vllm_status || "unknown"}
+          {active?.status || "unknown"}
         </span>
         {active?.model_id && (
           <span className="ml-2 text-gray-600">| {active.model_id}</span>
@@ -38,7 +38,7 @@ export function ModelSelector() {
         <option value="">Select model...</option>
         {models.map((m) => (
           <option key={m.id} value={m.id}>
-            {m.name} ({m.size_gb}GB)
+            {m.name} ({m.parameter_size || `${m.size_gb}GB`})
           </option>
         ))}
       </select>

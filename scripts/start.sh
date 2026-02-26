@@ -16,7 +16,7 @@ if [ -f "$PROJECT_DIR/.env" ]; then
 fi
 
 BACKEND_PORT="${BACKEND_PORT:-8020}"
-VLLM_PORT="${VLLM_PORT:-8030}"
+OLLAMA_PORT="${OLLAMA_PORT:-11434}"
 QDRANT_PORT="${QDRANT_PORT:-6333}"
 
 NO_FRONTEND=false
@@ -30,9 +30,22 @@ echo "=== Starting Local RAG LLM Application ==="
 
 mkdir -p "$PROJECT_DIR/logs"
 
-# 1. Docker services (vLLM + Qdrant)
+# 1. Check Ollama + Start Qdrant
 echo ""
-echo "[1/3] Starting Docker services (vLLM + Qdrant)..."
+echo "[1/3] Checking Ollama & starting Qdrant..."
+
+# Check Ollama is running
+printf "  Ollama: "
+if curl -sf "http://localhost:$OLLAMA_PORT/" > /dev/null 2>&1; then
+    MODELS=$(curl -sf "http://localhost:$OLLAMA_PORT/api/tags" | python3 -c "import sys,json; d=json.load(sys.stdin); print(', '.join(m['name'] for m in d.get('models',[])))" 2>/dev/null || echo "unknown")
+    echo "OK (models: $MODELS)"
+else
+    echo "UNREACHABLE"
+    echo "  Please start Ollama first: ollama serve"
+    exit 1
+fi
+
+# Start Qdrant via Docker
 cd "$PROJECT_DIR"
 docker compose up -d
 
@@ -47,21 +60,6 @@ for i in $(seq 1 30); do
         exit 1
     fi
     sleep 2
-done
-
-echo "  Waiting for vLLM (model loading may take a few minutes)..."
-for i in $(seq 1 120); do
-    if curl -sf "http://localhost:$VLLM_PORT/health" > /dev/null 2>&1; then
-        MODEL=$(curl -sf "http://localhost:$VLLM_PORT/v1/models" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['id'])" 2>/dev/null || echo "unknown")
-        echo "  vLLM: OK (model: $MODEL)"
-        break
-    fi
-    if [ "$i" -eq 120 ]; then
-        echo "  vLLM: TIMEOUT (check: docker compose logs vllm)"
-        exit 1
-    fi
-    printf "."
-    sleep 5
 done
 
 # 2. Backend (FastAPI)
@@ -118,7 +116,7 @@ fi
 # Summary
 echo ""
 echo "=== All Services Started ==="
-echo "  vLLM:     http://localhost:$VLLM_PORT"
+echo "  Ollama:   http://localhost:$OLLAMA_PORT (native)"
 echo "  Qdrant:   http://localhost:$QDRANT_PORT"
 echo "  Backend:  http://localhost:$BACKEND_PORT  (Swagger: http://localhost:$BACKEND_PORT/docs)"
 if [ "$NO_FRONTEND" = false ]; then

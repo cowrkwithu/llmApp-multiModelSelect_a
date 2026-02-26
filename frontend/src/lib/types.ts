@@ -1,16 +1,15 @@
 export interface ModelInfo {
   id: string;
   name: string;
+  parameter_size: string;
+  family: string;
   quantization: string;
   size_gb: number;
-  context_length: number;
-  languages: string[];
-  description: string;
 }
 
 export interface ActiveModel {
   model_id: string | null;
-  vllm_status: string;
+  status: string;
   error?: string | null;
 }
 

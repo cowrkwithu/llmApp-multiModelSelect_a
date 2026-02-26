@@ -8,9 +8,9 @@
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Next.js UI    │────▶│  FastAPI Backend  │────▶│  vLLM (Docker)  │
-│   :3020         │     │  :8020            │     │  :8030          │
-└─────────────────┘     │                  │     │  GPU: RTX 2070  │
+│   Next.js UI    │────▶│  FastAPI Backend  │────▶│ Ollama (native) │
+│   :3020         │     │  :8020            │     │  :11434         │
+└─────────────────┘     │                  │     │  GPU: RTX 3090  │
                         │  sentence-trans.  │     └─────────────────┘
                         │  (CPU embedding)  │
                         │                  │     ┌─────────────────┐
@@ -23,17 +23,17 @@
 |---------|------|------|
 | **Next.js** | 웹 UI (채팅, 문서관리, 모델선택) | 3020 |
 | **FastAPI** | REST API, RAG 파이프라인, 임베딩 | 8020 |
-| **vLLM** | LLM 추론 서버 (OpenAI API 호환) | 8030 |
+| **Ollama** | LLM 추론 서버 (OpenAI API 호환) | 11434 |
 | **Qdrant** | 벡터 데이터베이스 | 6333 |
 
 ### Key Design Decisions
 
 | 항목 | 선택 | 이유 |
 |------|------|------|
-| Embedding | `intfloat/multilingual-e5-base` (CPU) | 8GB VRAM 전부 vLLM에 할당, 임베딩은 CPU로 분리 |
+| LLM Engine | Ollama (네이티브 설치) | 즉시 모델 전환, Docker 불필요, 온디맨드 로딩 |
+| Embedding | `intfloat/multilingual-e5-base` (CPU) | GPU VRAM 전부 Ollama에 할당, 임베딩은 CPU로 분리 |
 | Vector DB | Qdrant (collection: `{model_id}__{label}`) | 모델별 독립 벡터 저장소 |
-| LLM 모델 | 7B GPTQ/AWQ Int4 양자화 (~4-5GB) | 8GB VRAM 제약 내 동작 |
-| Streaming | SSE (Server-Sent Events) | vLLM OpenAI API 호환, 실시간 응답 |
+| Streaming | SSE (Server-Sent Events) | Ollama OpenAI API 호환, 실시간 응답 |
 
 ### RAG Pipeline Flow
 
@@ -46,28 +46,35 @@
     ↓
 [3] 검색된 청크로 컨텍스트 구성
     ↓
-[4] LangChain → vLLM /v1/chat/completions (SSE 스트리밍)
+[4] LangChain → Ollama /v1/chat/completions (SSE 스트리밍)
     ↓
 [5] 스트리밍 응답 + 소스 인용 반환
 ```
 
 ## Supported Models
 
-| Model | Quantization | Size | Languages |
-|-------|-------------|------|-----------|
-| Qwen/Qwen2.5-7B-Instruct-GPTQ-Int4 | GPTQ 4bit | ~4.5GB | en, zh, ko, ja |
-| TheBloke/Mistral-7B-Instruct-v0.3-GPTQ | GPTQ 4bit | ~4.2GB | en, fr, de, es |
-| hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4 | AWQ 4bit | ~4.8GB | en, de, fr, it, pt, hi, es, th |
+Ollama에 설치된 모든 모델이 자동으로 사용 가능하다. 현재 설치된 모델:
 
-모델 목록은 `docker/vllm/models.json`에서 관리하며, UI에서 실시간 전환이 가능하다.
+| Model | Size |
+|-------|------|
+| exaone3.5:7.8b | ~4.7GB |
+| qwen3:14b | ~9.0GB |
+| gemma3:27b | ~17GB |
+
+모델 목록은 Ollama API (`/api/tags`)에서 실시간으로 조회하며, 정적 설정 파일이 없다.
+UI에서 모델을 선택하면 즉시 전환된다 (Ollama가 온디맨드로 로딩).
+
+새 모델 추가:
+```bash
+ollama pull <model-name>
+```
 
 ## Prerequisites
 
 - **OS**: Linux (WSL2 포함)
-- **GPU**: NVIDIA GPU (8GB+ VRAM 권장, CUDA 12.x 지원 드라이버)
-  - 현재 vLLM 이미지(`v0.6.6.post1`)는 CUDA 12.4 기반. Driver 545+ 필요
-  - `latest` 이미지는 CUDA 12.9 요구하므로 최신 드라이버 필요
-- **Docker**: Docker Engine + Docker Compose v2 + [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+- **GPU**: NVIDIA GPU (RTX 3090 24GB 사용 중)
+- **Ollama**: v0.15+ 설치 및 실행 중 ([설치 가이드](https://ollama.com/download))
+- **Docker**: Docker Engine + Docker Compose v2 (Qdrant 컨테이너용)
 - **Python**: 3.11+
 - **Node.js**: 18+
 
@@ -81,27 +88,25 @@ cd llmApp-multiModelSelect_a
 
 # 환경변수 설정
 cp .env.example .env
-# 필요시 .env 파일을 편집하여 포트, 모델 등을 변경
+# 필요시 .env 파일을 편집하여 포트 등을 변경
 ```
 
-### 2. Download Model (Optional - vLLM이 자동 다운로드하지만 사전 다운로드 가능)
+### 2. Install Ollama & Pull Models
 
 ```bash
-# HuggingFace CLI 필요: pip install huggingface_hub[cli]
-./scripts/download-model.sh Qwen/Qwen2.5-7B-Instruct-GPTQ-Int4
+# Ollama 설치 (이미 설치되어 있으면 스킵)
+curl -fsSL https://ollama.com/install.sh | sh
+
+# 모델 다운로드
+ollama pull exaone3.5:7.8b
+ollama pull qwen3:14b
+ollama pull gemma3:27b
 ```
 
-### 3. Start Docker Services (vLLM + Qdrant)
+### 3. Start Docker Services (Qdrant)
 
 ```bash
 docker compose up -d
-```
-
-vLLM은 첫 기동 시 모델을 다운로드하므로 시간이 걸릴 수 있다.
-로그로 진행 상황을 확인한다:
-
-```bash
-docker compose logs -f vllm
 ```
 
 ### 4. Install & Start Backend
@@ -130,10 +135,10 @@ UI 접속: http://localhost:3020
 ### 6. Quick Start / Stop (전체 서비스 일괄 관리)
 
 ```bash
-# 전체 서비스 시작 (Docker + Backend + Frontend)
+# 전체 서비스 시작 (Ollama 확인 + Qdrant + Backend + Frontend)
 ./scripts/start.sh
 
-# 전체 서비스 정지
+# 전체 서비스 정지 (Ollama 제외)
 ./scripts/stop.sh
 
 # Frontend 없이 시작
@@ -148,16 +153,16 @@ UI 접속: http://localhost:3020
 ### Quick Start
 
 1. http://localhost:3020 접속
-2. **Dashboard**에서 vLLM 상태 확인 (healthy 표시)
-3. 모델 선택 (기본: Qwen2.5-7B)
+2. **Dashboard**에서 Ollama 상태 확인 (healthy 표시)
+3. 모델 선택 (설치된 Ollama 모델 목록에서)
 4. **Collections** 페이지에서 새 컬렉션 생성
 5. **Documents** 페이지에서 PDF/DOCX/TXT 파일 업로드
 6. **Chat** 페이지에서 문서 기반 질의응답
 
 ### Model Switching
 
-UI의 모델 선택 드롭다운에서 다른 모델을 선택하면 vLLM 컨테이너가 재시작되며 새 모델이 로드된다.
-모델 전환에는 수 분이 소요될 수 있다.
+UI의 모델 선택 드롭다운에서 다른 모델을 선택하면 즉시 전환된다.
+Ollama가 온디맨드로 모델을 로드하므로 별도의 재시작이 필요 없다.
 
 ### RAG vs Direct Chat
 
@@ -174,8 +179,8 @@ Chat 페이지에서 "Use RAG" 체크박스를 통해 전환:
 또는 개별 서비스 확인:
 
 ```bash
-# vLLM
-curl http://localhost:8030/health
+# Ollama
+curl http://localhost:11434/
 
 # Qdrant
 curl http://localhost:6333/healthz
@@ -190,10 +195,10 @@ curl http://localhost:8020/health
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/` | 등록된 모델 목록 |
-| GET | `/active` | 현재 활성 모델 + vLLM 상태 |
-| POST | `/switch` | 모델 전환 (vLLM 재시작) |
-| GET | `/status` | vLLM 헬스체크 |
+| GET | `/` | 설치된 Ollama 모델 목록 (실시간 조회) |
+| GET | `/active` | 현재 선택된 모델 + Ollama 상태 |
+| POST | `/switch` | 모델 선택 (즉시 전환) |
+| GET | `/status` | Ollama 헬스체크 |
 
 ### Documents `/api/v1/documents`
 
@@ -223,7 +228,7 @@ curl http://localhost:8020/health
 
 ```
 llmApp-multiModelSelect_a/
-├── docker-compose.yml              # vLLM + Qdrant + Backend(profile:full)
+├── docker-compose.yml              # Qdrant + Backend(profile:full)
 ├── .env.example                    # 환경변수 템플릿
 ├── CLAUDE.md                       # 프로젝트 컨텍스트
 │
@@ -242,7 +247,7 @@ llmApp-multiModelSelect_a/
 │       │   └── collections.py      # 컬렉션 CRUD
 │       ├── schemas/                # Pydantic request/response
 │       ├── services/
-│       │   ├── vllm_client.py      # vLLM OpenAI API 클라이언트
+│       │   ├── ollama_client.py    # Ollama OpenAI API 클라이언트
 │       │   ├── embedding_service.py # CPU 임베딩 (sentence-transformers)
 │       │   ├── qdrant_service.py   # 벡터 CRUD + 유사도 검색
 │       │   ├── document_processor.py # 파싱 → 청킹 → 임베딩 → 저장
@@ -261,9 +266,8 @@ llmApp-multiModelSelect_a/
 │       ├── hooks/                  # React Query 훅
 │       └── lib/                    # API 클라이언트, 타입 정의
 │
-├── docker/vllm/models.json        # 모델 레지스트리
-├── data/                           # models/, qdrant_storage/ (gitignored)
-└── scripts/                        # download-model.sh, health-check.sh
+├── data/                           # qdrant_storage/, uploads/ (gitignored)
+└── scripts/                        # start.sh, stop.sh, health-check.sh, download-model.sh
 ```
 
 ## Configuration
@@ -272,32 +276,25 @@ llmApp-multiModelSelect_a/
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VLLM_PORT` | 8030 | vLLM 서버 포트 |
+| `OLLAMA_HOST` | localhost | Ollama 서버 호스트 |
+| `OLLAMA_PORT` | 11434 | Ollama 서버 포트 |
 | `QDRANT_PORT` | 6333 | Qdrant 포트 |
 | `BACKEND_PORT` | 8020 | Backend API 포트 |
-| `DEFAULT_MODEL_ID` | Qwen/Qwen2.5-7B-Instruct-GPTQ-Int4 | 기본 로드 모델 |
-| `VLLM_GPU_MEMORY_UTILIZATION` | 0.92 | GPU 메모리 사용률 (RTX 2070 8GB 기준) |
-| `VLLM_MAX_MODEL_LEN` | 2048 | 최대 컨텍스트 길이 (VRAM 제약으로 축소) |
 | `EMBEDDING_MODEL` | intfloat/multilingual-e5-base | 임베딩 모델 |
 | `RAG_TOP_K` | 5 | 검색 결과 수 |
 | `RAG_CHUNK_SIZE` | 512 | 문서 청크 크기 |
 | `RAG_CHUNK_OVERLAP` | 50 | 청크 간 겹침 |
-| `HF_TOKEN` | (empty) | HuggingFace 토큰 (gated 모델용) |
 
 ## Docker Compose Commands
 
-> **Note**: vLLM 이미지는 `vllm/vllm-openai:v0.6.6.post1` (CUDA 12.4 기반)을 사용한다.
-> `latest` 이미지는 CUDA 12.9를 요구하므로, CUDA 12.3 이하 환경에서는 반드시 고정 버전을 사용해야 한다.
-
 ```bash
-# 기본 서비스 시작 (vLLM + Qdrant)
+# Qdrant 시작
 docker compose up -d
 
-# 전체 서비스 시작 (vLLM + Qdrant + Backend)
+# 전체 서비스 시작 (Qdrant + Backend)
 docker compose --profile full up -d
 
 # 로그 확인
-docker compose logs -f vllm
 docker compose logs -f qdrant
 
 # 서비스 중지
@@ -323,6 +320,6 @@ docker compose down -v
 - TanStack React Query
 
 **Infrastructure**
-- vLLM (OpenAI-compatible inference server)
-- Qdrant (vector database)
-- Docker Compose, NVIDIA Container Toolkit
+- Ollama (OpenAI-compatible inference server, native)
+- Qdrant (vector database, Docker)
+- Docker Compose

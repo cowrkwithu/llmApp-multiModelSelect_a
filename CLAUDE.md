@@ -1,20 +1,22 @@
 # Local RAG LLM Application
 
 ## Project Overview
-vLLM-based local RAG application with multi-model selection.
+Ollama-based local RAG application with multi-model selection.
 Users select local LLM models, upload documents (txt/docx/PDF), and perform Q&A based on document content.
 
 ## Architecture
 - **Frontend**: Next.js (port 3020) - TypeScript, Tailwind CSS, Tanstack Query
 - **Backend**: FastAPI (port 8020) - Python, LangChain, sentence-transformers
-- **vLLM**: Docker container (port 8030) - GPU inference with RTX 3090 (24GB VRAM)
+- **Ollama**: Native installation (port 11434) - GPU inference with RTX 3090 (24GB VRAM)
 - **Qdrant**: Docker container (port 6333) - Vector database
 
 ## Key Decisions
-- Embedding runs on CPU (`intfloat/multilingual-e5-base`, 768dim) to keep GPU VRAM free for vLLM
-- Models: 7B GPTQ/AWQ Int4 quantized (~4-5GB), RTX 3090 24GB allows generous context length
+- Embedding runs on CPU (`intfloat/multilingual-e5-base`, 768dim) to keep GPU VRAM free for Ollama
+- Models: Ollama-managed (exaone3.5:7.8b, qwen3:14b, gemma3:27b), dynamically queried via `/api/tags`
 - Per-model vector storage: Qdrant collection naming `{model_id}__{collection_label}`
 - SSE streaming for chat responses
+- Ollama provides OpenAI-compatible API (`/v1/chat/completions`), so AsyncOpenAI client is reused
+- Model switching is instant (in-memory selection + Ollama on-demand loading), no container restart needed
 
 ## Development Commands
 ```bash
@@ -25,7 +27,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8020 --reload
 # Frontend
 cd frontend && npm install && npm run dev
 
-# Docker (vLLM + Qdrant)
+# Docker (Qdrant only)
 docker compose up -d
 
 # Full stack (including backend container)
@@ -35,7 +37,6 @@ docker compose --profile full up -d
 ## Project Structure
 - `backend/app/` - FastAPI application
 - `frontend/src/` - Next.js application
-- `docker/vllm/models.json` - Model registry
 - `scripts/` - Utility scripts
 - `docs/` - Work memos and documentation
 

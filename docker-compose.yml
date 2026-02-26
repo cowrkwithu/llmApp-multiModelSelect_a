@@ -1,34 +1,4 @@
 services:
-  vllm:
-    image: vllm/vllm-openai:v0.6.6.post1
-    container_name: vllm-server
-    ports:
-      - "${VLLM_PORT:-8030}:8000"
-    volumes:
-      - ./data/models:/root/.cache/huggingface
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    environment:
-      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
-    command: >
-      --model ${DEFAULT_MODEL_ID:-Qwen/Qwen2.5-7B-Instruct-GPTQ-Int4}
-      --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION:-0.90}
-      --max-model-len ${VLLM_MAX_MODEL_LEN:-8192}
-      --dtype auto
-      --trust-remote-code
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-
   qdrant:
     image: qdrant/qdrant:latest
     container_name: qdrant-server
@@ -54,13 +24,13 @@ services:
     volumes:
       - ./data/uploads:/app/data/uploads
     environment:
-      - VLLM_HOST=vllm
-      - VLLM_PORT=8000
+      - OLLAMA_HOST=host.docker.internal
+      - OLLAMA_PORT=11434
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
-      vllm:
-        condition: service_healthy
       qdrant:
         condition: service_healthy
     profiles:

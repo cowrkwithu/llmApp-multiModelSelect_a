@@ -2,6 +2,7 @@
 
 # Local RAG LLM Application - Stop All Services
 # Usage: ./scripts/stop.sh [--keep-docker]
+# Note: Ollama runs natively and is NOT stopped by this script
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -68,10 +69,10 @@ if [ -n "$PIDS" ]; then
     echo "  Cleaned up remaining processes on port $BACKEND_PORT"
 fi
 
-# 3. Docker services
+# 3. Docker services (Qdrant only)
 echo ""
 if [ "$KEEP_DOCKER" = false ]; then
-    echo "[3/3] Stopping Docker services (vLLM + Qdrant)..."
+    echo "[3/3] Stopping Docker services (Qdrant)..."
     cd "$PROJECT_DIR"
     docker compose down
     echo "  Docker services stopped"
@@ -81,3 +82,5 @@ fi
 
 echo ""
 echo "=== All Services Stopped ==="
+echo "  Note: Ollama runs natively and was not stopped."
+echo "  To stop Ollama: systemctl stop ollama (or kill the ollama process)"

@@ -18,15 +18,15 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="text-sm font-semibold text-gray-500">vLLM Status</h2>
+          <h2 className="text-sm font-semibold text-gray-500">Ollama Status</h2>
           <p
             className={`mt-1 text-2xl font-bold ${
-              active?.vllm_status === "healthy"
+              active?.status === "healthy"
                 ? "text-green-600"
                 : "text-red-500"
             }`}
           >
-            {active?.vllm_status || "Unknown"}
+            {active?.status || "Unknown"}
           </p>
           {active?.model_id && (
             <p className="mt-1 text-sm text-gray-500 truncate">

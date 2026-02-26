@@ -4,11 +4,10 @@ from pydantic import BaseModel
 class ModelInfo(BaseModel):
     id: str
     name: str
+    parameter_size: str
+    family: str
     quantization: str
     size_gb: float
-    context_length: int
-    languages: list[str]
-    description: str
 
 
 class ModelListResponse(BaseModel):
@@ -17,7 +16,7 @@ class ModelListResponse(BaseModel):
 
 class ActiveModelResponse(BaseModel):
     model_id: str | None
-    vllm_status: str
+    status: str
     error: str | None = None
 
 

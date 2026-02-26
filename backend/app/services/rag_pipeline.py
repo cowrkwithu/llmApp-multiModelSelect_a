@@ -2,7 +2,7 @@ import json
 from collections.abc import AsyncGenerator
 
 from app.services import qdrant_service
-from app.services.vllm_client import get_openai_client
+from app.services.ollama_client import get_openai_client
 
 SYSTEM_PROMPT = """You are a helpful assistant. Answer the user's question based on the provided context.
 If the context doesn't contain relevant information, say so honestly.

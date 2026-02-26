@@ -32,9 +32,6 @@ frontend/out/
 .DS_Store
 Thumbs.db
 
-# Docker volumes
-docker/vllm/cache/
-
 # Logs
 *.log
 logs/
