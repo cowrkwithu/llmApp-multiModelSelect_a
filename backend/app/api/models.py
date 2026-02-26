@@ -40,7 +40,15 @@ async def list_models():
 
 @router.get("/active", response_model=ActiveModelResponse)
 async def get_active_model():
+    global _selected_model_id
     health = await check_ollama_health()
+
+    # Auto-select first installed model if none selected
+    if _selected_model_id is None and health["status"] == "healthy":
+        ollama_models = await list_installed_models()
+        if ollama_models:
+            _selected_model_id = ollama_models[0]["name"]
+
     return ActiveModelResponse(
         model_id=_selected_model_id,
         status=health["status"],
